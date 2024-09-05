@@ -3,9 +3,12 @@ package sycod.com.poc.api;
 import jakarta.validation.constraints.NotNull;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import software.amazon.awssdk.services.bedrockruntime.endpoints.internal.Value;
 import sycod.com.poc.model.Cliente;
 import sycod.com.poc.model.RegionBolsa;
 import sycod.com.poc.repository.ClienteRepository;
@@ -17,6 +20,27 @@ import java.util.Set;
 @CrossOrigin(origins = "*")
 @RequestMapping(path = "/api/v1/clientes", produces = MediaType.APPLICATION_JSON_VALUE)
 public class Controller {
+
+    @Autowired
+    private RedisTemplate<String,String> redisTemplate;
+
+    private void incrementJson(String key, String path, double increment){
+        String command = "JSON.NUMINCRBY";
+        redisTemplate.execute((RedisCallback<Object>) (connection)->{
+            connection.execute(command,key.getBytes(),path.getBytes(),String.valueOf(increment).getBytes());
+            return null;
+        });
+    }
+
+    private void decrementJson(String key, String path, double increment){
+        double decrement = increment*(-1);
+        String command = "JSON.NUMINCRBY";
+        redisTemplate.execute((RedisCallback<Object>) (connection)->{
+            connection.execute(command,key.getBytes(),path.getBytes(),String.valueOf(decrement).getBytes());
+            return null;
+        });
+    }
+
     @Autowired
     ClienteRepository repo;
 
@@ -103,20 +127,18 @@ public class Controller {
     Cliente putRestaSaldoRegionBolsa(@RequestParam("idCliente") Integer id, @RequestParam("region") Integer region, @RequestParam("saldo") Double saldo){
         Cliente cliente = repo.findByIdCliente(id);
         RegionBolsa regionBolsa = cliente.getRegionBolsas().stream().filter(rb->rb.getRegion().equals(region)).findFirst().orElse(null);
-        cliente.getRegionBolsas().remove(regionBolsa);
-        regionBolsa.setSaldoInicial(regionBolsa.getSaldoInicial()-saldo);
-        cliente.getRegionBolsas().add(regionBolsa);
-        return repo.save(cliente);
+        String key = "sycod.com.poc.model.Cliente:"+cliente.getUlid();
+        decrementJson(key,".regionBolsas[1].saldoInicial",saldo);
+        return repo.findByIdCliente(id);
     }
 
     @PutMapping("actualizar/region-bolsa/suma-saldo")
     Cliente putSumaSaldoRegionBolsa(@RequestParam("idCliente") Integer id, @RequestParam("region") Integer region, @RequestParam("saldo") Double saldo){
         Cliente cliente = repo.findByIdCliente(id);
         RegionBolsa regionBolsa = cliente.getRegionBolsas().stream().filter(rb->rb.getRegion().equals(region)).findFirst().orElse(null);
-        cliente.getRegionBolsas().remove(regionBolsa);
-        regionBolsa.setSaldoInicial(regionBolsa.getSaldoInicial()+saldo);
-        cliente.getRegionBolsas().add(regionBolsa);
-        return repo.save(cliente);
+        String key = "sycod.com.poc.model.Cliente:"+cliente.getUlid();
+        incrementJson(key,".regionBolsas[1].saldoInicial",saldo);
+        return repo.findByIdCliente(id);
     }
     @DeleteMapping("borrar")
     @ResponseStatus(HttpStatus.NO_CONTENT)

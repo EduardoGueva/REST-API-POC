@@ -5,6 +5,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.connection.RedisConnection;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import sycod.com.poc.model.Cliente;
 import sycod.com.poc.model.RegionBolsa;
 import sycod.com.poc.repository.ClienteRepository;
@@ -17,6 +20,14 @@ import java.util.Set;
 @EnableRedisDocumentRepositories(basePackages = "sycod.com.poc.*")
 @SpringBootApplication
 public class PocApplication {
+
+	@Bean
+	public RedisTemplate<String,String> redisTemplate(RedisConnectionFactory connectionFactory) {
+		RedisTemplate<String,String> template = new RedisTemplate<>();
+		template.setConnectionFactory(connectionFactory);
+		return template;
+	}
+
 
 	@Bean
 	CommandLineRunner loadTestData(ClienteRepository repo) {
