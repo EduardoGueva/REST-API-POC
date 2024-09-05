@@ -36,23 +36,23 @@ public class PocApplication {
 			Random rn = new Random();
 
 			RegionBolsa regionBolsa1 = RegionBolsa.builder()
-					.region(Math.abs(rn.nextInt()))
+					.region(9)
 					.horaLDC(Timestamp.valueOf(LocalDateTime.now()).getTime())
-					.saldoInicial(Math.abs(rn.nextDouble()))
+					.saldoInicial(50000)
 					.saldoFinal(Math.abs(rn.nextDouble()))
 					.fechaSaldo(Timestamp.valueOf(LocalDateTime.now()).getTime())
 					.build();
 
 			RegionBolsa regionBolsa2 = RegionBolsa.builder()
-					.region(Math.abs(rn.nextInt()))
+					.region(8)
 					.horaLDC(Timestamp.valueOf(LocalDateTime.now()).getTime())
-					.saldoInicial(Math.abs(rn.nextDouble()))
+					.saldoInicial(0)
 					.saldoFinal(Math.abs(rn.nextDouble()))
 					.fechaSaldo(Timestamp.valueOf(LocalDateTime.now()).getTime())
 					.build();
 
 			Cliente cliente = Cliente.builder()
-					.idCliente(Math.abs(rn.nextInt()))
+					.idCliente(123)
 					.nombre("cliente")
 					.codigoCliente("cliente")
 					.rfc("rfc")
